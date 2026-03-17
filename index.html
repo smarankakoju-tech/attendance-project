@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MECS CSE-A Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        .meme-container img { 
+            border-radius: 1.5rem; 
+            max-width: 100%; 
+            height: auto; 
+            margin: 1rem auto; 
+            border: 4px solid white; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+            display: block;
+        }
+        .dark .meme-container img { border-color: #1E293B; }
+    </style>
+</head>
+<body class="min-h-screen font-sans pb-10 transition-colors duration-300 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+
+    <nav class="bg-blue-600 dark:bg-blue-900 text-white p-4 shadow-md mb-6 border-b-4 border-blue-500 dark:border-blue-700">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-black tracking-tighter uppercase text-white">MECS CSE-A</h1>
+                <p id="istClock" class="text-[10px] text-blue-200 font-mono italic font-bold"></p>
+            </div>
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-blue-500 dark:bg-blue-800 hover:bg-blue-400 dark:hover:bg-blue-700 transition-all">
+                <i id="darkIcon" class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-md mx-auto px-4 space-y-6">
+        
+        <div id="memeSection" class="meme-container text-center hidden">
+            <img id="memeImage" src="" alt="Meme Status">
+            <p id="memeCaption" class="text-sm font-black italic mt-3 text-slate-700 dark:text-slate-400 uppercase tracking-tight px-4"></p>
+        </div>
+
+        <section class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[11px] font-bold ml-1 text-blue-600 dark:text-blue-400 uppercase tracking-widest">Attended</label>
+                    <input type="number" id="userAttended" oninput="calculate()" class="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-2xl p-4 focus:border-blue-500 outline-none font-black text-4xl text-blue-600 dark:text-blue-400 transition-all shadow-inner" placeholder="0">
+                </div>
+                <div class="p-4 bg-blue-50 dark:bg-slate-700/50 rounded-2xl border border-blue-100 dark:border-slate-600 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] text-blue-400 font-bold uppercase">Total (IST Sync)</p>
+                        <p id="autoTotal" class="font-black text-2xl text-blue-800 dark:text-blue-300">--</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="changeOffset(-1)" class="bg-white dark:bg-slate-600 border border-blue-200 dark:border-slate-500 text-blue-600 dark:text-blue-200 w-8 h-8 rounded-full font-bold shadow-sm">-1</button>
+                        <button onclick="changeOffset(1)" class="bg-white dark:bg-slate-600 border border-blue-200 dark:border-slate-500 text-blue-600 dark:text-blue-200 w-8 h-8 rounded-full font-bold shadow-sm">+1</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-slate-700">
+                <div id="progressBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
+            </div>
+            <div id="percentDisplay" class="text-8xl font-black mb-2 tracking-tighter">0%</div>
+            <div id="statusBadge" class="inline-block px-6 py-1.5 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 mb-6 uppercase tracking-widest border border-slate-200 dark:border-slate-800">--</div>
+            <div id="predictionBox" class="rounded-2xl p-5 text-sm font-black bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+                Updating...
+            </div>
+        </section>
+
+        <div class="text-center space-y-2 pt-4">
+            <p class="text-[10px] text-slate-400 px-8 uppercase font-bold tracking-tighter">
+                Developed by Matrusri Victim and .exe
+            </p>
+            <button onclick="resetData()" class="text-[9px] text-slate-300 dark:text-slate-600 hover:text-red-400 uppercase font-bold">Wipe Data</button>
+        </div>
+    </main>
+
+    <script>
+        const SEMESTER_START = new Date("2026-03-17"); 
+        const BASELINE_PERIODS = 120;
+        const TIMETABLE = { 1: 5, 2: 5, 3: 6, 4: 4, 5: 4, 6: 0, 0: 0 }; 
+        const HOLIDAYS = ["2026-03-31"]; 
+
+        let userData = JSON.parse(localStorage.getItem('mecs_csea_data')) || { attended: 0, offset: 0, dark: false };
+
+        function toggleDarkMode() {
+            userData.dark = !userData.dark;
+            applyTheme();
+            localStorage.setItem('mecs_csea_data', JSON.stringify(userData));
+        }
+
+        function applyTheme() {
+            const icon = document.getElementById('darkIcon');
+            if (userData.dark) {
+                document.documentElement.classList.add('dark');
+                icon.className = "fa-solid fa-sun";
+            } else {
+                document.documentElement.classList.remove('dark');
+                icon.className = "fa-solid fa-moon";
+            }
+        }
+
+        function getISTDate() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        }
+
+        function calculateAutoTotal() {
+            let now = getISTDate();
+            let total = BASELINE_PERIODS + userData.offset;
+            let current = new Date(SEMESTER_START);
+            while (current <= now) {
+                let dateString = current.toISOString().split('T')[0];
+                if (!HOLIDAYS.includes(dateString)) total += TIMETABLE[current.getDay()];
+                current.setDate(current.getDate() + 1);
+            }
+            return total;
+        }
+
+        function updateMeme(percentage, error = false) {
+            const section = document.getElementById('memeSection');
+            const img = document.getElementById('memeImage');
+            const cap = document.getElementById('memeCaption');
+            if (error) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+
+            if (percentage >= 85) {
+                img.src = "ayya-namaskaram.gif";
+img.width = 400;
+            } else if (percentage >= 75) {
+                img.src = "wow-nice.gif";
+                cap.innerText = "Woww... Nice!";img.width = 400;
+
+            } else if (percentage >= 65) {
+                img.src = "noo-rajini.gif";img.width = 400;
+                cap.innerText = "Kastam modalaindi...";
+            } else {
+                img.src = "https://tenor.com/view/arey-orey-rey-ohh-pani-chey-aythe-oka-pani-chey-aythe-gif-1001891134363109766";
+                cap.innerText = "G chekkestharu!";
+            }
+        }
+
+        function calculate() {
+            const input = document.getElementById('userAttended');
+            const attended = parseInt(input.value) || 0;
+            const autoTotal = calculateAutoTotal();
+            const display = document.getElementById('percentDisplay');
+            const badge = document.getElementById('statusBadge');
+            const predBox = document.getElementById('predictionBox');
+            const bar = document.getElementById('progressBar');
+
+            document.getElementById('autoTotal').innerText = autoTotal + " Periods";
+            userData.attended = attended;
+            localStorage.setItem('mecs_csea_data', JSON.stringify(userData));
+
+            if (attended > autoTotal) {
+                display.innerText = "???";
+                badge.innerText = "SYSTEM ERROR";
+                predBox.innerHTML = "Total kante ekkuva attend avvalevu! Over-action oddhu.";
+                updateMeme(0, true);
+                return;
+            }
+
+            const percentage = autoTotal === 0 ? 0 : ((attended / autoTotal) * 100).toFixed(1);
+            display.innerText = percentage + "%";
+            bar.style.width = Math.min(percentage, 100) + "%";
+
+            if (percentage >= 75) {
+                display.style.color = "#22C55E";
+                badge.innerText = "SAFE";
+                badge.className = "inline-block px-6 py-1.5 rounded-full text-xs font-black bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 uppercase tracking-widest border border-green-200 dark:border-green-800";
+                let canSkip = 0;
+                while (((attended) / (autoTotal + canSkip + 1)) * 100 >= 75) { canSkip++; }
+                predBox.innerHTML = `You can skip <span class="text-green-500 text-lg">${canSkip}</span> more periods.`;
+            } else {
+                display.style.color = "#EF4444";
+                badge.innerText = "KASTAM";
+                badge.className = "inline-block px-6 py-1.5 rounded-full text-xs font-black bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 uppercase tracking-widest border border-red-200 dark:border-red-800";
+                const mustAttend = Math.ceil(((75 * autoTotal) - (100 * attended)) / (100 - 75));
+                predBox.innerHTML = `Attend the next <span class="text-red-500 text-lg">${mustAttend}</span> classes to maintain 75%.`;
+            }
+            updateMeme(parseFloat(percentage));
+        }
+
+        function changeOffset(val) { userData.offset += val; calculate(); }
+        function resetData() { if(confirm("Clear data?")) { userData = { attended: 0, offset: 0, dark: userData.dark }; document.getElementById('userAttended').value = ''; calculate(); } }
+        setInterval(() => {
+            const now = getISTDate();
+            document.getElementById('istClock').innerText = "IST: " + now.toLocaleTimeString();
+            document.getElementById('dayTag').innerText = "MECS CSE-A | " + now.toLocaleDateString('en-IN', { weekday: 'long' });
+        }, 1000);
+        applyTheme();
+        if(userData.attended > 0) document.getElementById('userAttended').value = userData.attended;
+        calculate();
+    </script>
+</body>
+</html>
