@@ -10,6 +10,38 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
+        .btn-minus {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-minus:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-plus {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(34,197,94,0.15);
+            color: #22c55e;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-plus:hover {
+            transform: scale(1.1);
+        }
+
+        .count {
+            font-size: 18px;
+            font-weight: bold;
+            width: 24px;
+            text-align: center;
+        }
         .meme-container img { 
             border-radius: 1.5rem; 
             max-width: 100%; 
@@ -20,26 +52,71 @@
             display: block;
         }
         .dark .meme-container img { border-color: #1E293B; }
+        #resultArea { display: none; } 
     </style>
 </head>
 <body class="min-h-screen font-sans pb-10 transition-colors duration-300 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
 
-    <nav class="bg-blue-600 dark:bg-blue-900 text-white p-4 shadow-md mb-6 border-b-4 border-blue-500 dark:border-blue-700">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black tracking-tighter uppercase text-white">MECS CSE-A</h1>
-                <p id="istClock" class="text-[10px] text-blue-200 font-mono italic font-bold"></p>
-            </div>
-            <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-blue-500 dark:bg-blue-800 hover:bg-blue-400 dark:hover:bg-blue-700 transition-all">
-                <i id="darkIcon" class="fa-solid fa-moon"></i>
+    <div class="max-w-md mx-auto flex justify-between items-center">
+    
+    <!-- LEFT: Title -->
+    <div>
+        <h1 class="text-xl font-black tracking-tighter uppercase text-white">MECS CSE-A</h1>
+        <p id="istClock" class="text-[10px] text-blue-200 font-mono italic font-bold"></p>
+    </div>
+
+    <!-- RIGHT: Buttons grouped -->
+    <div class="flex items-center gap-2">
+
+        <!-- Dark mode -->
+        <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-blue-500 dark:bg-blue-800 hover:bg-blue-400 dark:hover:bg-blue-700 transition-all">
+            <i id="darkIcon" class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- 3-dot menu -->
+        <div class="relative">
+            <button onclick="toggleMenu()" class="p-2 rounded-full bg-blue-500 hover:bg-blue-400">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
             </button>
+
+            <div id="menuDropdown"
+            class="hidden absolute right-0 mt-3 w-56 
+            bg-white/80 dark:bg-slate-800/80 
+            backdrop-blur-xl 
+            border border-white/20 dark:border-slate-700 
+            rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade">
+
+                <button onclick="showHolidays()" 
+                class="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold 
+                hover:bg-blue-100/60 dark:hover:bg-slate-700 transition-all">
+                    <i class="fa-solid fa-calendar-days text-blue-500"></i>
+                    Holidays Till Now
+                </button>
+
+                <button onclick="showUpcoming()" 
+                class="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold 
+                hover:bg-green-100/60 dark:hover:bg-slate-700 transition-all">
+                    <i class="fa-solid fa-clock text-green-500"></i>
+                    Upcoming Holidays
+                </button>
+
+                <button onclick="showHelp()" 
+                class="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold 
+                hover:bg-purple-100/60 dark:hover:bg-slate-700 transition-all">
+                    <i class="fa-solid fa-circle-question text-purple-500"></i>
+                    Help
+                </button>
+
+            </div>
         </div>
-    </nav>
+
+    </div>
+</div>
 
     <main class="max-w-md mx-auto px-4 space-y-6">
         
         <div id="memeSection" class="meme-container text-center hidden">
-            <img id="memeImage" src="" alt="Meme Status">
+            <img id="memeImage" src="" alt="Meme Status" width="400">
             <p id="memeCaption" class="text-sm font-black italic mt-3 text-slate-700 dark:text-slate-400 uppercase tracking-tight px-4"></p>
         </div>
 
@@ -51,53 +128,259 @@
                 </div>
                 <div class="p-4 bg-blue-50 dark:bg-slate-700/50 rounded-2xl border border-blue-100 dark:border-slate-600 flex justify-between items-center">
                     <div>
-                        <p class="text-[10px] text-blue-400 font-bold uppercase">Total (IST Sync)</p>
+                        <p class="text-[10px] text-blue-400 font-bold uppercase">Total Target (IST Sync)</p>
                         <p id="autoTotal" class="font-black text-2xl text-blue-800 dark:text-blue-300">--</p>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button onclick="changeOffset(-1)" class="bg-white dark:bg-slate-600 border border-blue-200 dark:border-slate-500 text-blue-600 dark:text-blue-200 w-8 h-8 rounded-full font-bold shadow-sm">-1</button>
-                        <button onclick="changeOffset(1)" class="bg-white dark:bg-slate-600 border border-blue-200 dark:border-slate-500 text-blue-600 dark:text-blue-200 w-8 h-8 rounded-full font-bold shadow-sm">+1</button>
                     </div>
                 </div>
             </div>
         </section>
+        <!-- Upcoming Section -->
+        <div id="upcomingSection" class="hidden bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-black mb-3 text-center">Upcoming Holidays</h3>
+            <p id="upcomingCount" class="text-center text-2xl font-bold text-blue-600"></p>
+            <ul id="upcomingList" class="list-disc list-inside text-sm mt-3 space-y-1 mx-auto w-fit text-left"></ul>
+        </div>
 
-        <section class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-slate-700">
-                <div id="progressBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
-            </div>
-            <div id="percentDisplay" class="text-8xl font-black mb-2 tracking-tighter">0%</div>
-            <div id="statusBadge" class="inline-block px-6 py-1.5 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 mb-6 uppercase tracking-widest border border-slate-200 dark:border-slate-800">--</div>
-            <div id="predictionBox" class="rounded-2xl p-5 text-sm font-black bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200">
-                Updating...
-            </div>
-        </section>
+        <!-- Holidays Section -->
+        <div id="holidaySection" class="hidden bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-black mb-3 text-center">Holidays Till Now</h3>
+            <p id="holidayCount" class="text-center text-2xl font-bold text-blue-600"></p>
+            <ul id="holidayList" class="list-disc list-inside text-sm mt-3 space-y-1 mx-auto w-fit text-left"></ul>
+        </div>
+        <div id="helpSection" class="hidden bg-white/70 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700">
 
-        <div class="text-center space-y-2 pt-4">
+    <h3 class="text-center text-lg font-black mb-5 tracking-wide">Mark Absences</h3>
+
+    <div class="space-y-3">
+
+        <!-- Day Row Template -->
+        <!-- Monday -->
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-700/60 px-4 py-3 rounded-xl shadow-sm">
+            <span class="font-semibold">Monday <span class="text-blue-500">(5)</span></span>
+            <div class="flex items-center gap-3">
+
+                <button onclick="changeDay('mon', -1)"
+                class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 text-red-500 hover:scale-110 transition">−</button>
+
+                <span id="monCount" class="font-bold text-lg w-6 text-center">0</span>
+
+                <button onclick="changeDay('mon', 1)"
+                class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40 text-green-500 hover:scale-110 transition">+</button>
+
+            </div>
+        </div>
+
+        <!-- Tuesday -->
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-700/60 px-4 py-3 rounded-xl shadow-sm">
+            <span class="font-semibold">Tuesday <span class="text-blue-500">(5)</span></span>
+            <div class="flex items-center gap-3">
+                <button onclick="changeDay('tue', -1)" class="btn-minus">−</button>
+                <span id="tueCount" class="count">0</span>
+                <button onclick="changeDay('tue', 1)" class="btn-plus">+</button>
+            </div>
+        </div>
+
+        <!-- Wednesday -->
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-700/60 px-4 py-3 rounded-xl shadow-sm">
+            <span class="font-semibold">Wednesday <span class="text-blue-500">(6)</span></span>
+            <div class="flex items-center gap-3">
+                <button onclick="changeDay('wed', -1)" class="btn-minus">−</button>
+                <span id="wedCount" class="count">0</span>
+                <button onclick="changeDay('wed', 1)" class="btn-plus">+</button>
+            </div>
+        </div>
+
+        <!-- Thursday -->
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-700/60 px-4 py-3 rounded-xl shadow-sm">
+            <span class="font-semibold">Thursday <span class="text-blue-500">(4)</span></span>
+            <div class="flex items-center gap-3">
+                <button onclick="changeDay('thu', -1)" class="btn-minus">−</button>
+                <span id="thuCount" class="count">0</span>
+                <button onclick="changeDay('thu', 1)" class="btn-plus">+</button>
+            </div>
+        </div>
+
+        <!-- Friday -->
+        <div class="flex justify-between items-center bg-slate-100 dark:bg-slate-700/60 px-4 py-3 rounded-xl shadow-sm">
+            <span class="font-semibold">Friday <span class="text-blue-500">(4)</span></span>
+            <div class="flex items-center gap-3">
+                <button onclick="changeDay('fri', -1)" class="btn-minus">−</button>
+                <span id="friCount" class="count">0</span>
+                <button onclick="changeDay('fri', 1)" class="btn-plus">+</button>
+            </div>
+        </div>
+
+    </div>
+
+    <p class="mt-5 text-center text-sm text-slate-400">
+        Attended updates automatically
+    </p>
+
+</div>
+        <div id="resultArea">
+            <section class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-slate-200 dark:border-slate-700 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-slate-700">
+                    <div id="progressBar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <div id="percentDisplay" class="text-8xl font-black mb-2 tracking-tighter">0%</div>
+                <div id="statusBadge" class="inline-block px-6 py-1.5 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 mb-6 uppercase tracking-widest border border-slate-200 dark:border-slate-800">--</div>
+                <div id="predictionBox" class="rounded-2xl p-5 text-sm font-black bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+                    Updating...
+                </div>
+            </section>
+        </div>
+
+        <div class="text-center pt-4">
             <p class="text-[10px] text-slate-400 px-8 uppercase font-bold tracking-tighter">
                 Developed by Matrusri Victim and .exe
             </p>
-            <button onclick="resetData()" class="text-[9px] text-slate-300 dark:text-slate-600 hover:text-red-400 uppercase font-bold">Wipe Data</button>
         </div>
     </main>
 
     <script>
-        const SEMESTER_START = new Date("2026-03-17"); 
-        const BASELINE_PERIODS = 120;
+        function toggleMenu() {
+            const menu = document.getElementById("menuDropdown");
+            menu.classList.toggle("hidden");
+        }
+        let absence = {
+            mon: 0,
+            tue: 0,
+            wed: 0,
+            thu: 0,
+            fri: 0
+        };
+
+        const DAY_CLASSES = {
+            mon: 5,
+            tue: 5,
+            wed: 6,
+            thu: 4,
+            fri: 4
+        };
+
+        function changeDay(day, val) {
+            absence[day] += val;
+            if (absence[day] < 0) absence[day] = 0;
+
+            document.getElementById(day + "Count").innerText = absence[day];
+            updateAttendanceFromAbsence();
+        }
+
+        function updateAttendanceFromAbsence() {
+            const total = calculateAutoTotal();
+
+            let missed = 0;
+            for (let day in absence) {
+                missed += absence[day] * DAY_CLASSES[day];
+            }
+
+            let attended = total - missed;
+            if (attended < 0) attended = 0;
+
+            document.getElementById("userAttended").value = attended;
+            calculate();
+        }
+        // hide all sections
+        function hideAllSections() {
+            document.getElementById("holidaySection").classList.add("hidden");
+            document.getElementById("upcomingSection").classList.add("hidden");
+        }
+
+        // show past holidays
+        function showHolidays() {
+            hideAllSections();
+
+            const section = document.getElementById("holidaySection");
+            section.classList.remove("hidden");
+
+            showHolidaysTillNow();
+
+            document.getElementById("menuDropdown").classList.add("hidden");
+        }
+
+        // show upcoming holidays
+        function showUpcoming() {
+            hideAllSections();
+
+            const section = document.getElementById("upcomingSection");
+            const list = document.getElementById("upcomingList");
+
+            section.classList.remove("hidden");
+            list.innerHTML = "";
+
+            const today = getISTDate();
+            today.setHours(0,0,0,0);
+
+            let count = 0;
+
+            HOLIDAYS.forEach(date => {
+                let d = new Date(date);
+                d.setHours(0,0,0,0);
+
+                if (d > today) {
+                    count++;
+
+                    let li = document.createElement("li");
+                    li.innerText = d.toDateString(); // same format
+                    list.appendChild(li);
+                }
+            });
+
+            // show message if none
+            if (count === 0) {
+                let li = document.createElement("li");
+                li.innerText = "No upcoming holidays";
+                list.appendChild(li);
+            }
+            document.getElementById("upcomingCount").innerText = `${count} Holidays`;
+            document.getElementById("menuDropdown").classList.add("hidden");
+        }
+
+        // help popup
+        function showHelp() {
+            hideAllSections();
+            document.getElementById("helpSection").classList.remove("hidden");
+            document.getElementById("menuDropdown").classList.add("hidden");
+        }
+            document.addEventListener("click", function(e) {
+            const menu = document.getElementById("menuDropdown");
+
+            if (!e.target.closest(".relative")) {
+                menu.classList.add("hidden");
+            }
+        });
+        const SEMESTER_START = new Date("2026-02-09"); 
+        const BASELINE_PERIODS = 0;
         const TIMETABLE = { 1: 5, 2: 5, 3: 6, 4: 4, 5: 4, 6: 0, 0: 0 }; 
-        const HOLIDAYS = ["2026-03-31"]; 
+        const DAY_END_TIME = {
+            1: { h: 15, m: 10 }, // Monday
+            2: { h: 15, m: 10 }, // Tuesday
+            3: { h: 16, m: 10 }, // Wednesday
+            4: { h: 14, m: 10 }, // Thursday
+            5: { h: 14, m: 10 }, // Friday
+            6: { h: 0, m: 0 },   // Saturday
+            0: { h: 0, m: 0 }    // Sunday
+        };
+        const HOLIDAYS = ["2026-03-03", "2026-03-19"]; 
 
-        let userData = JSON.parse(localStorage.getItem('mecs_csea_data')) || { attended: 0, offset: 0, dark: false };
+        // Theme is the only thing we save for usability
+        let isDark = localStorage.getItem('mecs_csea_dark');
 
+        if (isDark === null) {
+            // first time → force dark mode
+            isDark = true;
+        } else {
+            isDark = isDark === 'true';
+        }
         function toggleDarkMode() {
-            userData.dark = !userData.dark;
+            isDark = !isDark;
             applyTheme();
-            localStorage.setItem('mecs_csea_data', JSON.stringify(userData));
+            localStorage.setItem('mecs_csea_dark', isDark);
         }
 
         function applyTheme() {
             const icon = document.getElementById('darkIcon');
-            if (userData.dark) {
+            if (isDark) {
                 document.documentElement.classList.add('dark');
                 icon.className = "fa-solid fa-sun";
             } else {
@@ -111,42 +394,133 @@
         }
 
         function calculateAutoTotal() {
-            let now = getISTDate();
-            let total = BASELINE_PERIODS + userData.offset;
-            let current = new Date(SEMESTER_START);
-            while (current <= now) {
-                let dateString = current.toISOString().split('T')[0];
-                if (!HOLIDAYS.includes(dateString)) total += TIMETABLE[current.getDay()];
-                current.setDate(current.getDate() + 1);
-            }
-            return total;
+    let now = getISTDate();
+    let total = BASELINE_PERIODS;
+    let current = new Date(SEMESTER_START);
+
+    const holidaySet = new Set(HOLIDAYS);
+
+    // Normalize current date
+    current.setHours(0,0,0,0);
+
+    // Decide last valid day to count
+    let lastCountDate = new Date(now);
+    lastCountDate.setHours(0,0,0,0);
+
+    // ⏰ If time is before 5 PM → don't count today
+    let todayDay = now.getDay();
+    let endTime = DAY_END_TIME[todayDay];
+
+    // If today is weekend → don't count
+    if (TIMETABLE[todayDay] === 0) {
+        lastCountDate.setDate(lastCountDate.getDate() - 1);
+    } else {
+        let currentMinutes = now.getHours() * 60 + now.getMinutes();
+        let endMinutes = endTime.h * 60 + endTime.m;
+
+        // ⏰ If before end time → don't count today
+        if (currentMinutes < endMinutes) {
+            lastCountDate.setDate(lastCountDate.getDate() - 1);
         }
+    }
+
+    while (current <= lastCountDate) {
+        let dateString = current.toLocaleDateString('en-CA');
+
+        if (!holidaySet.has(dateString)) {
+            total += TIMETABLE[current.getDay()];
+        }
+
+        current.setDate(current.getDate() + 1);
+    }
+
+    return total;
+}
+
+        function showHolidaysTillNow() {
+            const today = getISTDate();
+            today.setHours(0,0,0,0);
+
+            const list = document.getElementById("holidayList");
+            const countBox = document.getElementById("holidayCount");
+
+            list.innerHTML = "";
+
+            let count = 0;
+
+            HOLIDAYS.forEach(date => {
+            let d = new Date(date);
+            d.setHours(0,0,0,0);
+
+            if (d <= today) {
+            count++;
+
+            let li = document.createElement("li");
+            li.innerText = d.toDateString();
+            list.appendChild(li);
+            }
+            });
+
+            countBox.innerText = `${count} Holidays`;
+        }
+
+        let memeTimer;
 
         function updateMeme(percentage, error = false) {
             const section = document.getElementById('memeSection');
             const img = document.getElementById('memeImage');
             const cap = document.getElementById('memeCaption');
-            if (error) { section.classList.add('hidden'); return; }
-            section.classList.remove('hidden');
 
-            if (percentage >= 85) {
-                img.src = "ayya-namaskaram.gif";
-img.width = 400;
-            } else if (percentage >= 75) {
-                img.src = "wow-nice.gif";
-                cap.innerText = "Woww... Nice!";img.width = 400;
+            clearTimeout(memeTimer);
 
-            } else if (percentage >= 65) {
-                img.src = "noo-rajini.gif";img.width = 400;
-                cap.innerText = "Kastam modalaindi...";
-            } else {
-                img.src = "oka-pani-chey.gif";img.width = 400;
-                cap.innerText = "G chekkestharu!";
+            if (error) {
+                section.classList.add('hidden');
+                return;
             }
+
+            // show loading immediately
+            section.classList.remove('hidden');
+            img.src = "";
+            cap.innerText = "Loading...";
+
+            memeTimer = setTimeout(() => {
+
+                if (percentage > 100) {
+                    img.src = "baane-extralu-chesthunnaav-ga.gif";
+                    cap.innerText = "Baane extralu chestunnav ga!";
+                }
+                else if (percentage >= 85) {
+                    img.src = "ayya-namaskaram.gif";
+                    cap.innerText = "Ayya Namaskaram!";
+                } 
+                else if (percentage >= 75) {
+                    img.src = "wow-nice.gif";
+                    cap.innerText = "Woww... Nice!";
+                } 
+                else if (percentage >= 65) {
+                    img.src = "lingaa-rajini.gif";
+                    cap.innerText = "Kastam modalaindi...";
+                } 
+                else {
+                    img.src = "oka-pani-chey.gif";
+                    cap.innerText = "G chekkestharu!";
+                }
+
+            }, 1000);
         }
 
         function calculate() {
             const input = document.getElementById('userAttended');
+            const resultArea = document.getElementById('resultArea');
+            
+            if (!input.value) {
+                resultArea.style.display = "none";
+                document.getElementById('memeSection').classList.add('hidden');
+                return;
+            } else {
+                resultArea.style.display = "block";
+            }
+
             const attended = parseInt(input.value) || 0;
             const autoTotal = calculateAutoTotal();
             const display = document.getElementById('percentDisplay');
@@ -154,19 +528,15 @@ img.width = 400;
             const predBox = document.getElementById('predictionBox');
             const bar = document.getElementById('progressBar');
 
-            document.getElementById('autoTotal').innerText = autoTotal + " Periods";
-            userData.attended = attended;
-            localStorage.setItem('mecs_csea_data', JSON.stringify(userData));
-
             if (attended > autoTotal) {
-                display.innerText = "???";
-                badge.innerText = "SYSTEM ERROR";
-                predBox.innerHTML = "Total kante ekkuva attend avvalevu! Over-action oddhu.";
-                updateMeme(0, true);
+                display.innerText = "N/A";
+                badge.innerText = "ERROR";
+                predBox.innerHTML = "You can not attend more classes than the total. Please check your input.";
+                updateMeme(101, false);
                 return;
             }
 
-            const percentage = autoTotal === 0 ? 0 : ((attended / autoTotal) * 100).toFixed(1);
+            const percentage = autoTotal === 0 ? 0 : Number(((attended / autoTotal) * 100).toFixed(1));
             display.innerText = percentage + "%";
             bar.style.width = Math.min(percentage, 100) + "%";
 
@@ -176,27 +546,26 @@ img.width = 400;
                 badge.className = "inline-block px-6 py-1.5 rounded-full text-xs font-black bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 uppercase tracking-widest border border-green-200 dark:border-green-800";
                 let canSkip = 0;
                 while (((attended) / (autoTotal + canSkip + 1)) * 100 >= 75) { canSkip++; }
-                predBox.innerHTML = `You can skip <span class="text-green-500 text-lg">${canSkip}</span> more periods.`;
+                predBox.innerHTML = `You can skip ${canSkip} more periods.`;
             } else {
                 display.style.color = "#EF4444";
                 badge.innerText = "KASTAM";
                 badge.className = "inline-block px-6 py-1.5 rounded-full text-xs font-black bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 uppercase tracking-widest border border-red-200 dark:border-red-800";
                 const mustAttend = Math.ceil(((75 * autoTotal) - (100 * attended)) / (100 - 75));
-                predBox.innerHTML = `Attend the next <span class="text-red-500 text-lg">${mustAttend}</span> classes to maintain 75%.`;
+                predBox.innerHTML = `Attend the next ${mustAttend} classes to maintain 75%.`;
             }
             updateMeme(parseFloat(percentage));
         }
 
-        function changeOffset(val) { userData.offset += val; calculate(); }
-        function resetData() { if(confirm("Clear data?")) { userData = { attended: 0, offset: 0, dark: userData.dark }; document.getElementById('userAttended').value = ''; calculate(); } }
         setInterval(() => {
             const now = getISTDate();
             document.getElementById('istClock').innerText = "IST: " + now.toLocaleTimeString();
             document.getElementById('dayTag').innerText = "MECS CSE-A | " + now.toLocaleDateString('en-IN', { weekday: 'long' });
         }, 1000);
+
         applyTheme();
-        if(userData.attended > 0) document.getElementById('userAttended').value = userData.attended;
-        calculate();
+        document.getElementById('autoTotal').innerText = calculateAutoTotal() + " Periods";
+        showHolidaysTillNow();
     </script>
 </body>
 </html>
